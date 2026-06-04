@@ -239,6 +239,8 @@ const copy = {
     analytics: "访问数据",
     signInGoogle: "使用 Google 登录",
     demoSignIn: "演示登录",
+    loginTitle: "先登录，再找附近好吃的",
+    loginBody: "登录后可以点赞、推荐餐厅、提交评论，也方便后台统计真实注册人数。",
     signedInAs: "已登录",
     signOut: "退出",
     registeredUsers: "注册用户",
@@ -329,6 +331,8 @@ const copy = {
     analytics: "Analytics",
     signInGoogle: "Sign in with Google",
     demoSignIn: "Demo sign in",
+    loginTitle: "Sign in to find nearby food",
+    loginBody: "After signing in, you can like places, recommend restaurants, and submit comments.",
     signedInAs: "Signed in",
     signOut: "Sign out",
     registeredUsers: "Registered users",
@@ -419,6 +423,8 @@ const copy = {
     analytics: "Data",
     signInGoogle: "Log masuk Google",
     demoSignIn: "Log masuk demo",
+    loginTitle: "Log masuk untuk cari makanan dekat",
+    loginBody: "Selepas log masuk, anda boleh like, cadang restoran dan hantar komen.",
     signedInAs: "Sudah log masuk",
     signOut: "Keluar",
     registeredUsers: "Pengguna berdaftar",
@@ -1107,6 +1113,7 @@ function App() {
   function handleSignOut() {
     setCurrentUser(null);
     safeWrite(storageKeys.currentUser, null);
+    setView("user");
     (window as WindowWithGoogle).google?.accounts?.id?.disableAutoSelect?.();
   }
 
@@ -1373,54 +1380,56 @@ function App() {
             </button>
 
             <div className="topbar-right">
-              <div className="top-location-card">
-                <div className="top-location">
-                  <MapPin size={16} />
-                  <select
-                    value={liveLocation ? "live" : locationId}
-                    onChange={(event) => handleLocationChange(event.target.value)}
-                    aria-label={c.nearby}
-                  >
-                    {liveLocation && <option value="live">{c.liveLocation}</option>}
-                    {locationOptions.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <button type="button" onClick={handleUseRealLocation}>
-                    {isLocating ? (
-                      <Loader2 className="spin" size={15} />
-                    ) : (
-                      <LocateFixed size={15} />
-                    )}
-                    <span>{isLocating ? c.locating : c.useLocation}</span>
-                  </button>
-                  <select
-                    className="radius-select"
-                    value={radiusKm}
-                    onChange={(event) => setRadiusKm(Number(event.target.value))}
-                    aria-label={c.radius}
-                  >
-                    <option value={5}>5km</option>
-                    <option value={8}>8km</option>
-                    <option value={12}>12km</option>
-                    <option value={20}>20km</option>
-                  </select>
+              {currentUser && (
+                <div className="top-location-card">
+                  <div className="top-location">
+                    <MapPin size={16} />
+                    <select
+                      value={liveLocation ? "live" : locationId}
+                      onChange={(event) => handleLocationChange(event.target.value)}
+                      aria-label={c.nearby}
+                    >
+                      {liveLocation && <option value="live">{c.liveLocation}</option>}
+                      {locationOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={handleUseRealLocation}>
+                      {isLocating ? (
+                        <Loader2 className="spin" size={15} />
+                      ) : (
+                        <LocateFixed size={15} />
+                      )}
+                      <span>{isLocating ? c.locating : c.useLocation}</span>
+                    </button>
+                    <select
+                      className="radius-select"
+                      value={radiusKm}
+                      onChange={(event) => setRadiusKm(Number(event.target.value))}
+                      aria-label={c.radius}
+                    >
+                      <option value={5}>5km</option>
+                      <option value={8}>8km</option>
+                      <option value={12}>12km</option>
+                      <option value={20}>20km</option>
+                    </select>
+                  </div>
+                  <p className={`location-status status-${locationStatus}`}>
+                    {locationStatus === "requesting" && c.locationRequesting}
+                    {locationStatus === "allowed" &&
+                      `${c.locationAllowed}${
+                        liveLocation?.accuracyMeters
+                          ? ` · ±${Math.round(liveLocation.accuracyMeters)}m`
+                          : ""
+                      }`}
+                    {locationStatus === "blocked" && c.locationBlocked}
+                    {locationStatus === "unsupported" && c.locationUnsupported}
+                    {locationStatus === "idle" && c.locationRequesting}
+                  </p>
                 </div>
-                <p className={`location-status status-${locationStatus}`}>
-                  {locationStatus === "requesting" && c.locationRequesting}
-                  {locationStatus === "allowed" &&
-                    `${c.locationAllowed}${
-                      liveLocation?.accuracyMeters
-                        ? ` · ±${Math.round(liveLocation.accuracyMeters)}m`
-                        : ""
-                    }`}
-                  {locationStatus === "blocked" && c.locationBlocked}
-                  {locationStatus === "unsupported" && c.locationUnsupported}
-                  {locationStatus === "idle" && c.locationRequesting}
-                </p>
-              </div>
+              )}
 
               <div className="language-switch" aria-label="Language">
                 <Languages size={16} />
@@ -1436,40 +1445,21 @@ function App() {
                 ))}
               </div>
 
-              <div className="auth-strip">
-                {currentUser ? (
-                  <>
-                    {currentUser.picture ? (
-                      <img src={currentUser.picture} alt={currentUser.name} />
-                    ) : (
-                      <span className="avatar-fallback">
-                        {currentUser.name.slice(0, 1).toUpperCase()}
-                      </span>
-                    )}
-                    <span>
-                      <small>{c.signedInAs}</small>
-                      <strong>{currentUser.name}</strong>
+              {currentUser && (
+                <div className="account-chip">
+                  {currentUser.picture ? (
+                    <img src={currentUser.picture} alt={currentUser.name} />
+                  ) : (
+                    <span className="avatar-fallback">
+                      {currentUser.name.slice(0, 1).toUpperCase()}
                     </span>
-                    <button type="button" onClick={handleSignOut}>
-                      {c.signOut}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    {googleClientId ? (
-                      <div ref={googleButtonRef} className="google-button-slot" />
-                    ) : (
-                      <button className="google-login-button" type="button" onClick={handleDemoSignIn}>
-                        <span>G</span>
-                        {c.signInGoogle}
-                      </button>
-                    )}
-                    <button className="demo-login-link" type="button" onClick={handleDemoSignIn}>
-                      {c.demoSignIn}
-                    </button>
-                  </>
-                )}
-              </div>
+                  )}
+                  <strong>{currentUser.name}</strong>
+                  <button type="button" onClick={handleSignOut}>
+                    {c.signOut}
+                  </button>
+                </div>
+              )}
             </div>
           </nav>
 
@@ -1497,7 +1487,16 @@ function App() {
         </div>
       </header>
 
-      {view === "user" && (
+      {!currentUser && (
+        <LoginGate
+          c={c}
+          googleClientId={googleClientId}
+          googleButtonRef={googleButtonRef}
+          onDemoSignIn={handleDemoSignIn}
+        />
+      )}
+
+      {currentUser && view === "user" && (
         <UserHome
           c={c}
           locale={locale}
@@ -1532,7 +1531,7 @@ function App() {
         />
       )}
 
-      {view === "submit" && (
+      {currentUser && view === "submit" && (
         <SubmitView
           c={c}
           manualName={manualName}
@@ -1590,12 +1589,14 @@ function App() {
         />
       )}
 
-      <footer className="site-footer">
-        <button className="submit-float-button" type="button" onClick={() => setView("submit")}>
-          <Send size={15} />
-          {c.submitPlace}
-        </button>
-      </footer>
+      {currentUser && (
+        <footer className="site-footer">
+          <button className="submit-float-button" type="button" onClick={() => setView("submit")}>
+            <Send size={15} />
+            {c.submitPlace}
+          </button>
+        </footer>
+      )}
 
       <nav className="fine-links" aria-label="Site links">
         <button type="button" onClick={() => setView("agreement")}>
@@ -1774,6 +1775,43 @@ function UserHome({
           ))}
         </div>
       </section>
+    </section>
+  );
+}
+
+function LoginGate({
+  c,
+  googleClientId,
+  googleButtonRef,
+  onDemoSignIn,
+}: {
+  c: (typeof copy)[Locale];
+  googleClientId?: string;
+  googleButtonRef: React.RefObject<HTMLDivElement | null>;
+  onDemoSignIn: () => void;
+}) {
+  return (
+    <section className="login-gate">
+      <div className="login-gate__panel">
+        <div>
+          <p className="eyebrow">Bubble Fish</p>
+          <h2>{c.loginTitle}</h2>
+          <p>{c.loginBody}</p>
+        </div>
+        <div className="login-actions">
+          {googleClientId ? (
+            <div ref={googleButtonRef} className="google-button-slot" />
+          ) : (
+            <button className="google-login-button" type="button" onClick={onDemoSignIn}>
+              <span>G</span>
+              {c.signInGoogle}
+            </button>
+          )}
+          <button className="demo-login-link" type="button" onClick={onDemoSignIn}>
+            {c.demoSignIn}
+          </button>
+        </div>
+      </div>
     </section>
   );
 }
