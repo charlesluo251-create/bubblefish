@@ -82,8 +82,24 @@ type SubmissionDraft = {
   price: string;
   dishes: string[];
   userReview: string;
-  status: "pending" | "enriched";
+  submitterName: string;
+  submitterEmail: string;
+  cashbackAmount: 2 | 4;
+  status: "pending" | "enriched" | "duplicate";
   submittedAt: string;
+  aiReview?: DraftAiReview;
+};
+
+type DraftAiReview = {
+  verdict: "approve" | "needs_review" | "duplicate" | "reject";
+  score: number;
+  duplicateOf: string;
+  normalizedName: string;
+  suggestedCategory: Exclude<CategoryKey, "all">;
+  suggestedPrice: string;
+  suggestedDishes: string[];
+  summary: string;
+  reasons: string[];
 };
 
 type LocationOption = {
@@ -196,8 +212,8 @@ const copy = {
     strongPick: "强推荐",
     pickAgain: "再换一家",
     nearbyChoices: "附近可选",
-    questionnairePublished: "用户推荐",
-    pendingReview: "待审核",
+    questionnairePublished: "已收推荐",
+    pendingReview: "审核队列",
     weekly: "本周好吃榜",
     noRank: "还没有真实点赞，点过赞后才会上榜。",
     dishes: "推荐菜",
@@ -218,7 +234,7 @@ const copy = {
     agreement: "用户协议",
     developer: "开发者",
     submitTitle: "推荐餐厅",
-    submitBody: "提交后会进入审核队列，不会直接展示给用户。",
+    submitBody: "实名 + Google 邮箱提交，审核通过返现 RM 4；只写内容不实名，审核通过返现 RM 2。",
     restaurantName: "店名",
     city: "城市",
     area: "区域",
@@ -226,6 +242,11 @@ const copy = {
     photo: "照片链接",
     uploadPhoto: "上传照片",
     userReview: "你的真实评价",
+    realName: "真实姓名",
+    cashbackRule: "返现规则",
+    fullCashback: "实名 + Google 邮箱推荐：RM 4",
+    lightCashback: "只写内容推荐：RM 2",
+    googleEmail: "Google 邮箱",
     submitReview: "提交审核",
     submitted: "已提交审核",
     submittedDetail: "你提交的餐厅已进入开发者审核台。",
@@ -259,6 +280,12 @@ const copy = {
     commentCount: "评论提交",
     approvals: "审核通过",
     enrich: "补全",
+    aiReview: "AI 初审",
+    runAiReview: "AI 初审",
+    duplicate: "疑似重复",
+    reviewScore: "质量分",
+    duplicateOf: "重复对象",
+    aiFallback: "未配置大模型密钥，已用本地规则初审。",
     approve: "通过",
     reject: "拒绝",
     reset: "重置演示数据",
@@ -288,8 +315,8 @@ const copy = {
     strongPick: "Strong pick",
     pickAgain: "Pick again",
     nearbyChoices: "nearby choices",
-    questionnairePublished: "user picks",
-    pendingReview: "pending review",
+    questionnairePublished: "picks received",
+    pendingReview: "review queue",
     weekly: "Weekly top",
     noRank: "No real likes yet. Places rank only after users vote.",
     dishes: "Recommended",
@@ -310,7 +337,7 @@ const copy = {
     agreement: "User terms",
     developer: "Developer",
     submitTitle: "Recommend a Restaurant",
-    submitBody: "Submissions enter review and do not appear publicly right away.",
+    submitBody: "Use a real name + Google email for RM 4 cashback after approval; content-only recommendations get RM 2.",
     restaurantName: "Name",
     city: "City",
     area: "Area",
@@ -318,6 +345,11 @@ const copy = {
     photo: "Photo URL",
     uploadPhoto: "Upload photo",
     userReview: "Your real review",
+    realName: "Real name",
+    cashbackRule: "Cashback",
+    fullCashback: "Real name + Google email: RM 4",
+    lightCashback: "Content-only recommendation: RM 2",
+    googleEmail: "Google email",
     submitReview: "Submit for review",
     submitted: "Submitted for review",
     submittedDetail: "Your restaurant is now in the developer review queue.",
@@ -351,6 +383,12 @@ const copy = {
     commentCount: "Comments",
     approvals: "Approvals",
     enrich: "Enrich",
+    aiReview: "AI review",
+    runAiReview: "AI review",
+    duplicate: "Possible duplicate",
+    reviewScore: "Quality score",
+    duplicateOf: "Duplicate of",
+    aiFallback: "No model key configured, so local rules were used.",
     approve: "Approve",
     reject: "Reject",
     reset: "Reset demo",
@@ -380,8 +418,8 @@ const copy = {
     strongPick: "Pilihan kuat",
     pickAgain: "Pilih lagi",
     nearbyChoices: "pilihan dekat",
-    questionnairePublished: "cadangan pengguna",
-    pendingReview: "menunggu semakan",
+    questionnairePublished: "cadangan diterima",
+    pendingReview: "barisan semakan",
     weekly: "Carta mingguan",
     noRank: "Belum ada like sebenar. Kedai naik selepas pengguna mengundi.",
     dishes: "Menu",
@@ -402,7 +440,7 @@ const copy = {
     agreement: "Terma pengguna",
     developer: "Pembangun",
     submitTitle: "Cadang Restoran",
-    submitBody: "Cadangan masuk semakan dan tidak terus dipaparkan.",
+    submitBody: "Nama sebenar + emel Google dapat RM 4 selepas lulus; cadangan tanpa nama sebenar dapat RM 2.",
     restaurantName: "Nama",
     city: "Bandar",
     area: "Kawasan",
@@ -410,6 +448,11 @@ const copy = {
     photo: "Pautan gambar",
     uploadPhoto: "Muat naik gambar",
     userReview: "Ulasan sebenar",
+    realName: "Nama sebenar",
+    cashbackRule: "Cashback",
+    fullCashback: "Nama sebenar + emel Google: RM 4",
+    lightCashback: "Cadangan isi sahaja: RM 2",
+    googleEmail: "Emel Google",
     submitReview: "Hantar semakan",
     submitted: "Dihantar untuk semakan",
     submittedDetail: "Restoran masuk barisan semakan pembangun.",
@@ -443,6 +486,12 @@ const copy = {
     commentCount: "Komen",
     approvals: "Diluluskan",
     enrich: "Lengkap",
+    aiReview: "Semakan AI",
+    runAiReview: "Semakan AI",
+    duplicate: "Mungkin berulang",
+    reviewScore: "Skor kualiti",
+    duplicateOf: "Berulang dengan",
+    aiFallback: "Kunci model belum diset, jadi aturan tempatan digunakan.",
     approve: "Lulus",
     reject: "Tolak",
     reset: "Reset demo",
@@ -489,6 +538,24 @@ const categories: CategoryKey[] = [
   "southeast",
   "coffee",
   "halal",
+];
+
+const supportedCities = [
+  "Kuala Lumpur",
+  "Petaling Jaya",
+  "Subang Jaya",
+  "Shah Alam",
+  "Puchong",
+  "Cheras",
+  "Kajang",
+  "Klang",
+  "Penang",
+  "Ipoh",
+  "Melaka",
+  "Johor Bahru",
+  "Kota Kinabalu",
+  "Kuching",
+  "Singapore",
 ];
 
 const locationOptions: LocationOption[] = [
@@ -746,6 +813,9 @@ const starterDrafts: SubmissionDraft[] = [
     price: "待补全",
     dishes: ["Curry Mee"],
     userReview: "咖喱汤底很香，辣度刚好，适合午餐快速解决。",
+    submitterName: "Demo User",
+    submitterEmail: "demo@bubblefish.local",
+    cashbackAmount: 4,
     status: "pending",
     submittedAt: "2026-06-04",
   },
@@ -847,6 +917,68 @@ function countryForCity(city: string) {
   return city === "Singapore" ? "Singapore" : "Malaysia";
 }
 
+function normalizeRestaurantName(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, "")
+    .replace(/restaurant|restoran|kedai|cafe|kopitiam/g, "");
+}
+
+function buildLocalAiReview(
+  draft: SubmissionDraft,
+  existingRestaurants: Restaurant[],
+): DraftAiReview {
+  const normalizedName = normalizeRestaurantName(draft.name);
+  const duplicate = existingRestaurants.find((restaurant) => {
+    const existingName = normalizeRestaurantName(restaurant.name);
+    const sameCity = restaurant.city === draft.city;
+    return (
+      sameCity &&
+      normalizedName.length > 0 &&
+      existingName.length > 0 &&
+      (existingName === normalizedName ||
+        existingName.includes(normalizedName) ||
+        normalizedName.includes(existingName))
+    );
+  });
+  const hasAddress = Boolean(draft.address.trim() || draft.area.trim());
+  const hasDishes = draft.dishes.length > 0;
+  const hasReview = draft.userReview.trim().length >= 12;
+  const score =
+    (hasAddress ? 30 : 0) +
+    (hasDishes ? 25 : 0) +
+    (hasReview ? 35 : 0) +
+    (draft.submitterEmail ? 10 : 0);
+  const verdict: DraftAiReview["verdict"] = duplicate
+    ? "duplicate"
+    : score >= 75
+      ? "approve"
+      : score >= 45
+        ? "needs_review"
+        : "reject";
+
+  return {
+    verdict,
+    score,
+    duplicateOf: duplicate?.name || "",
+    normalizedName: draft.name.trim(),
+    suggestedCategory: draft.category,
+    suggestedPrice: draft.city === "Singapore" ? "S$ 8-35" : "RM 15-60",
+    suggestedDishes: draft.dishes.length ? draft.dishes : ["To verify"],
+    summary: duplicate
+      ? `疑似和 ${duplicate.name} 重复。`
+      : score >= 75
+        ? "资料较完整，可以优先审核。"
+        : "资料还需要人工确认。",
+    reasons: [
+      hasAddress ? "有地址/区域" : "缺少地址或区域",
+      hasDishes ? "有推荐菜" : "缺少推荐菜",
+      hasReview ? "评价长度足够" : "评价偏短",
+      draft.submitterEmail ? "有登录邮箱" : "缺少登录邮箱",
+    ],
+  };
+}
+
 function decodeJwtPayload<T>(token: string): T | null {
   try {
     const [, payload] = token.split(".");
@@ -903,6 +1035,8 @@ function App() {
   const [manualImage, setManualImage] = useState("");
   const [manualDishes, setManualDishes] = useState("");
   const [manualReview, setManualReview] = useState("");
+  const [manualRealName, setManualRealName] = useState("");
+  const [aiReviewingId, setAiReviewingId] = useState<string | null>(null);
   const [ownerInput, setOwnerInput] = useState("");
   const [developerUnlocked, setDeveloperUnlocked] = useState(false);
   const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>(() =>
@@ -923,6 +1057,12 @@ function App() {
   const currentLocation: ActiveLocation = liveLocation || preset;
   const approvedComments = comments.filter((comment) => comment.status === "approved");
   const pendingComments = comments.filter((comment) => comment.status === "pending");
+  const normalizedDrafts = drafts.map((draft) => ({
+    ...draft,
+    submitterName: draft.submitterName || "",
+    submitterEmail: draft.submitterEmail || "",
+    cashbackAmount: draft.cashbackAmount || 2,
+  }));
 
   useEffect(() => {
     const next = {
@@ -1218,7 +1358,10 @@ function App() {
 
   function handleSubmitRestaurant(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!manualName.trim() || !manualReview.trim()) return;
+    if (!manualName.trim() || !manualReview.trim() || !currentUser) return;
+    const realName = manualRealName.trim();
+    const cashbackAmount: 2 | 4 =
+      realName && currentUser.provider === "google" && currentUser.email ? 4 : 2;
     const draft: SubmissionDraft = {
       id: makeId("draft"),
       name: manualName.trim(),
@@ -1233,6 +1376,9 @@ function App() {
         .map((dish) => dish.trim())
         .filter(Boolean),
       userReview: manualReview.trim(),
+      submitterName: realName,
+      submitterEmail: currentUser.email,
+      cashbackAmount,
       status: "pending",
       submittedAt: new Date().toISOString().slice(0, 10),
     };
@@ -1246,6 +1392,7 @@ function App() {
     setManualImage("");
     setManualDishes("");
     setManualReview("");
+    setManualRealName("");
     showToast(c.submitted, c.submittedDetail);
   }
 
@@ -1272,6 +1419,62 @@ function App() {
     );
     setDrafts(nextDrafts);
     safeWrite(storageKeys.drafts, nextDrafts);
+  }
+
+  async function handleRunAiReview(id: string) {
+    const draft = drafts.find((item) => item.id === id);
+    if (!draft) return;
+    setAiReviewingId(id);
+    let review = buildLocalAiReview(draft, restaurants);
+    let usedFallback = true;
+
+    try {
+      const response = await fetch("/api/review-draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draft, restaurants }),
+      });
+      if (response.ok) {
+        const payload = (await response.json()) as {
+          review?: DraftAiReview;
+          fallback?: boolean;
+        };
+        if (payload.review) {
+          review = payload.review;
+          usedFallback = Boolean(payload.fallback);
+        }
+      }
+    } catch {
+      usedFallback = true;
+    }
+
+    if (review.verdict === "duplicate") {
+      const nextDrafts = drafts.filter((item) => item.id !== id);
+      setDrafts(nextDrafts);
+      safeWrite(storageKeys.drafts, nextDrafts);
+      setAiReviewingId(null);
+      showToast(c.duplicate, review.summary || review.duplicateOf);
+      return;
+    }
+
+    const nextDrafts = drafts.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            aiReview: review,
+            status: "enriched" as const,
+            category: review.suggestedCategory || item.category,
+            price: review.suggestedPrice || item.price,
+            dishes: review.suggestedDishes.length
+              ? review.suggestedDishes
+              : item.dishes,
+          }
+        : item,
+    );
+    setDrafts(nextDrafts);
+    safeWrite(storageKeys.drafts, nextDrafts);
+    setAiReviewingId(null);
+    showToast(c.aiReview, usedFallback ? c.aiFallback : review.summary);
   }
 
   function handleApproveDraft(id: string) {
@@ -1315,7 +1518,7 @@ function App() {
     const reviewComment: Comment = {
       id: makeId("comment"),
       restaurantId: restaurant.id,
-      author: "Community",
+      author: draft.submitterName || "Community",
       text: draft.userReview,
       status: "approved",
       createdAt: draft.submittedAt,
@@ -1364,7 +1567,7 @@ function App() {
     safeWrite(storageKeys.analytics, defaultAnalytics);
   }
 
-  const totalApproved = restaurants.filter((item) => item.source === "community").length;
+  const totalRecommendations = restaurants.filter((item) => item.source === "community").length + drafts.length;
 
   return (
     <main className="app-shell">
@@ -1475,7 +1678,7 @@ function App() {
                 <small>{c.nearbyChoices}</small>
               </div>
               <div>
-                <span>{totalApproved}</span>
+                <span>{totalRecommendations}</span>
                 <small>{c.questionnairePublished}</small>
               </div>
               <div>
@@ -1548,6 +1751,9 @@ function App() {
           setManualDishes={setManualDishes}
           manualReview={manualReview}
           setManualReview={setManualReview}
+          manualRealName={manualRealName}
+          setManualRealName={setManualRealName}
+          currentUser={currentUser}
           onImageUpload={handleImageUpload}
           onSubmit={handleSubmitRestaurant}
           onBack={() => setView("user")}
@@ -1576,10 +1782,12 @@ function App() {
           onUnlock={handleUnlock}
           analytics={analytics}
           registeredUsers={registeredUsers}
-          drafts={drafts}
+          drafts={normalizedDrafts}
           comments={comments}
           restaurants={restaurants}
           onEnrichDraft={handleEnrichDraft}
+          onRunAiReview={handleRunAiReview}
+          aiReviewingId={aiReviewingId}
           onApproveDraft={handleApproveDraft}
           onRejectDraft={handleRejectDraft}
           onApproveComment={handleApproveComment}
@@ -1802,14 +2010,16 @@ function LoginGate({
           {googleClientId ? (
             <div ref={googleButtonRef} className="google-button-slot" />
           ) : (
-            <button className="google-login-button" type="button" onClick={onDemoSignIn}>
-              <span>G</span>
-              {c.signInGoogle}
-            </button>
+            <>
+              <button className="google-login-button" type="button" onClick={onDemoSignIn}>
+                <span>G</span>
+                {c.signInGoogle}
+              </button>
+              <button className="demo-login-link" type="button" onClick={onDemoSignIn}>
+                {c.demoSignIn}
+              </button>
+            </>
           )}
-          <button className="demo-login-link" type="button" onClick={onDemoSignIn}>
-            {c.demoSignIn}
-          </button>
         </div>
       </div>
     </section>
@@ -1967,6 +2177,9 @@ function SubmitView({
   setManualDishes,
   manualReview,
   setManualReview,
+  manualRealName,
+  setManualRealName,
+  currentUser,
   onImageUpload,
   onSubmit,
   onBack,
@@ -1986,6 +2199,9 @@ function SubmitView({
   setManualDishes: (value: string) => void;
   manualReview: string;
   setManualReview: (value: string) => void;
+  manualRealName: string;
+  setManualRealName: (value: string) => void;
+  currentUser: RegisteredUser | null;
   onImageUpload: (event: ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onBack: () => void;
@@ -2005,7 +2221,25 @@ function SubmitView({
           </div>
         </div>
 
+        <div className="cashback-box">
+          <strong>{c.cashbackRule}</strong>
+          <span>{c.fullCashback}</span>
+          <span>{c.lightCashback}</span>
+        </div>
+
         <form className="submission-form" onSubmit={onSubmit}>
+          <label>
+            {c.realName}
+            <input
+              value={manualRealName}
+              onChange={(event) => setManualRealName(event.target.value)}
+              placeholder="Wang Zixuan"
+            />
+          </label>
+          <label>
+            {c.googleEmail}
+            <input disabled value={currentUser?.email || ""} />
+          </label>
           <label>
             {c.restaurantName}
             <input
@@ -2019,9 +2253,9 @@ function SubmitView({
             {c.city}
             <span className="select-wrap">
               <select value={manualCity} onChange={(event) => setManualCity(event.target.value)}>
-                <option>Kuala Lumpur</option>
-                <option>Penang</option>
-                <option>Singapore</option>
+                {supportedCities.map((city) => (
+                  <option key={city}>{city}</option>
+                ))}
               </select>
               <ChevronDown size={16} />
             </span>
@@ -2116,6 +2350,8 @@ function DeveloperView({
   comments,
   restaurants,
   onEnrichDraft,
+  onRunAiReview,
+  aiReviewingId,
   onApproveDraft,
   onRejectDraft,
   onApproveComment,
@@ -2134,6 +2370,8 @@ function DeveloperView({
   comments: Comment[];
   restaurants: Restaurant[];
   onEnrichDraft: (id: string) => void;
+  onRunAiReview: (id: string) => void;
+  aiReviewingId: string | null;
   onApproveDraft: (id: string) => void;
   onRejectDraft: (id: string) => void;
   onApproveComment: (id: string) => void;
@@ -2247,12 +2485,51 @@ function DeveloperView({
                     </span>
                   </div>
                   <p className="note">{draft.userReview}</p>
+                  <div className="submitter-line">
+                    <span>{draft.submitterName || c.lightCashback}</span>
+                    <span>{draft.submitterEmail || "-"}</span>
+                    <strong>RM {draft.cashbackAmount}</strong>
+                  </div>
                   <div className="dish-list">
                     {(draft.dishes.length ? draft.dishes : [c.enrich]).map((dish) => (
                       <span key={dish}>{dish}</span>
                     ))}
                   </div>
+                  {draft.aiReview && (
+                    <div className={`ai-review-card verdict-${draft.aiReview.verdict}`}>
+                      <div>
+                        <strong>{c.aiReview}</strong>
+                        <span>
+                          {c.reviewScore}: {draft.aiReview.score}
+                        </span>
+                      </div>
+                      <p>{draft.aiReview.summary}</p>
+                      {draft.aiReview.duplicateOf && (
+                        <small>
+                          {c.duplicateOf}: {draft.aiReview.duplicateOf}
+                        </small>
+                      )}
+                      <ul>
+                        {draft.aiReview.reasons.map((reason) => (
+                          <li key={reason}>{reason}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <div className="queue-actions">
+                    <button
+                      className="ghost-button"
+                      type="button"
+                      onClick={() => onRunAiReview(draft.id)}
+                      disabled={aiReviewingId === draft.id}
+                    >
+                      {aiReviewingId === draft.id ? (
+                        <Loader2 className="spin" size={15} />
+                      ) : (
+                        <Sparkles size={15} />
+                      )}
+                      {c.runAiReview}
+                    </button>
                     <button className="ghost-button" type="button" onClick={() => onEnrichDraft(draft.id)}>
                       <Sparkles size={15} />
                       {c.enrich}
