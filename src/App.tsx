@@ -124,7 +124,7 @@ type RegisteredUser = {
   name: string;
   email: string;
   picture?: string;
-  provider: "google" | "demo";
+  provider: "google" | "guest";
   firstSeen: string;
   lastSeen: string;
   signIns: number;
@@ -267,10 +267,10 @@ const copy = {
     dashboard: "开发者面板",
     analytics: "访问数据",
     signInGoogle: "使用 Google 登录",
-    demoSignIn: "演示登录",
-    loginTitle: "先登录，再找附近好吃的",
+    guestSignIn: "游客进入",
+    loginTitle: "先看看附近好吃的",
     loginBody:
-      "登录是为了给你的账号保留口味记忆。同意用户协议后，Bubble Fish 会少重复推荐你常吃的类型，多给你尝试没吃过的菜系。",
+      "可以先用游客身份试用。使用 Google 登录只是为了给你的账号保留口味记忆；同意用户协议后，Bubble Fish 会少重复推荐你常吃的类型，多给你尝试没吃过的菜系。",
     signedInAs: "已登录",
     signOut: "退出",
     registeredUsers: "注册用户",
@@ -373,10 +373,10 @@ const copy = {
     dashboard: "Developer Panel",
     analytics: "Analytics",
     signInGoogle: "Sign in with Google",
-    demoSignIn: "Demo sign in",
-    loginTitle: "Sign in to find nearby food",
+    guestSignIn: "Continue as guest",
+    loginTitle: "Find nearby food first",
     loginBody:
-      "Sign in so this account can keep your taste memory. After you accept the terms, Bubble Fish can repeat less of what you already eat and suggest more new food types.",
+      "You can try Bubble Fish as a guest first. Google sign-in is only for keeping taste memory on your account; after you accept the terms, Bubble Fish can repeat less of what you already eat and suggest more new food types.",
     signedInAs: "Signed in",
     signOut: "Sign out",
     registeredUsers: "Registered users",
@@ -479,10 +479,10 @@ const copy = {
     dashboard: "Panel Pembangun",
     analytics: "Data",
     signInGoogle: "Log masuk Google",
-    demoSignIn: "Log masuk demo",
-    loginTitle: "Log masuk untuk cari makanan dekat",
+    guestSignIn: "Masuk sebagai tetamu",
+    loginTitle: "Cari makanan dekat dahulu",
     loginBody:
-      "Log masuk supaya akaun ini boleh simpan memori rasa anda. Selepas anda setuju terma, Bubble Fish boleh kurang ulang jenis yang biasa dimakan dan cadang lebih banyak jenis baharu.",
+      "Anda boleh cuba Bubble Fish sebagai tetamu dahulu. Log masuk Google hanya untuk simpan memori rasa pada akaun anda; selepas anda setuju terma, Bubble Fish boleh kurang ulang jenis yang biasa dimakan dan cadang lebih banyak jenis baharu.",
     signedInAs: "Sudah log masuk",
     signOut: "Keluar",
     registeredUsers: "Pengguna berdaftar",
@@ -1241,8 +1241,21 @@ function App() {
 
   function saveSignedInUser(user: RegisteredUser) {
     const now = new Date().toISOString();
+    if (user.provider === "guest") {
+      const guestUser: RegisteredUser = {
+        ...user,
+        firstSeen: now,
+        lastSeen: now,
+        signIns: 1,
+      };
+      setCurrentUser(guestUser);
+      safeWrite(storageKeys.currentUser, guestUser);
+      showToast(c.googleSignedIn, `${c.signedInAs} ${guestUser.name}`);
+      return;
+    }
+
     const previous = registeredUsers.find((item) => item.email === user.email);
-    const nextUser: RegisteredUser = previous
+    const registeredUser: RegisteredUser = previous
       ? {
           ...previous,
           name: user.name || previous.name,
@@ -1258,14 +1271,14 @@ function App() {
           signIns: 1,
         };
     const nextUsers = [
-      nextUser,
+      registeredUser,
       ...registeredUsers.filter((item) => item.email !== user.email),
     ];
     setRegisteredUsers(nextUsers);
-    setCurrentUser(nextUser);
+    setCurrentUser(registeredUser);
     safeWrite(storageKeys.users, nextUsers);
-    safeWrite(storageKeys.currentUser, nextUser);
-    showToast(c.googleSignedIn, `${c.signedInAs} ${nextUser.name}`);
+    safeWrite(storageKeys.currentUser, registeredUser);
+    showToast(c.googleSignedIn, `${c.signedInAs} ${registeredUser.name}`);
   }
 
   function handleGoogleCredential(response: GoogleCredentialResponse) {
@@ -1295,12 +1308,12 @@ function App() {
     });
   }
 
-  function handleDemoSignIn() {
+  function handleGuestSignIn() {
     saveSignedInUser({
-      id: "demo-user",
-      name: "Bubble Fish Demo",
-      email: "demo@bubblefish.local",
-      provider: "demo",
+      id: `guest-${Date.now().toString(36)}`,
+      name: "Guest",
+      email: `guest-${Date.now().toString(36)}@bubblefish.local`,
+      provider: "guest",
       firstSeen: "",
       lastSeen: "",
       signIns: 0,
@@ -1441,8 +1454,8 @@ function App() {
     event.preventDefault();
     if (!manualName.trim() || !manualReview.trim() || !currentUser) return;
     const realName = manualRealName.trim();
-    const cashbackAmount: 2 | 4 =
-      realName && currentUser.provider === "google" && currentUser.email ? 4 : 2;
+    const googleEmail = currentUser.provider === "google" ? currentUser.email : "";
+    const cashbackAmount: 2 | 4 = realName && googleEmail ? 4 : 2;
     const draft: SubmissionDraft = {
       id: makeId("draft"),
       name: manualName.trim(),
@@ -1458,7 +1471,7 @@ function App() {
         .filter(Boolean),
       userReview: manualReview.trim(),
       submitterName: realName,
-      submitterEmail: currentUser.email,
+      submitterEmail: googleEmail,
       cashbackAmount,
       status: "pending",
       submittedAt: new Date().toISOString().slice(0, 10),
@@ -1802,7 +1815,7 @@ function App() {
           acceptedAgreement={acceptedAgreement}
           googleClientId={googleClientId}
           googleButtonRef={googleButtonRef}
-          onDemoSignIn={handleDemoSignIn}
+          onGuestSignIn={handleGuestSignIn}
           onOpenAgreement={() => setView("agreement")}
         />
       )}
@@ -2109,14 +2122,14 @@ function LoginGate({
   acceptedAgreement,
   googleClientId,
   googleButtonRef,
-  onDemoSignIn,
+  onGuestSignIn,
   onOpenAgreement,
 }: {
   c: (typeof copy)[Locale];
   acceptedAgreement: boolean;
   googleClientId?: string;
   googleButtonRef: React.RefObject<HTMLDivElement | null>;
-  onDemoSignIn: () => void;
+  onGuestSignIn: () => void;
   onOpenAgreement: () => void;
 }) {
   return (
@@ -2136,19 +2149,13 @@ function LoginGate({
           )}
         </div>
         <div className="login-actions">
-          {googleClientId ? (
+          {googleClientId && (
             <div ref={googleButtonRef} className="google-button-slot" />
-          ) : (
-            <>
-              <button className="google-login-button" type="button" onClick={onDemoSignIn}>
-                <span>G</span>
-                {c.signInGoogle}
-              </button>
-              <button className="demo-login-link" type="button" onClick={onDemoSignIn}>
-                {c.demoSignIn}
-              </button>
-            </>
           )}
+          {!googleClientId && <span className="google-setup-note">{c.googleSetupNeeded}</span>}
+          <button className="guest-login-button" type="button" onClick={onGuestSignIn}>
+            {c.guestSignIn}
+          </button>
         </div>
       </div>
     </section>
@@ -2367,7 +2374,7 @@ function SubmitView({
           </label>
           <label>
             {c.googleEmail}
-            <input disabled value={currentUser?.email || ""} />
+            <input disabled value={currentUser?.provider === "google" ? currentUser.email : ""} />
           </label>
           <label>
             {c.restaurantName}

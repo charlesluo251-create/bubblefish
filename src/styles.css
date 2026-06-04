@@ -262,7 +262,7 @@ img {
 
 .account-chip button,
 .google-login-button,
-.demo-login-link {
+.guest-login-button {
   min-height: 34px;
   border-radius: 7px;
   font-size: 12px;
@@ -296,13 +296,6 @@ img {
   border-radius: 50%;
   color: #4285f4;
   font-weight: 900;
-}
-
-.demo-login-link {
-  border: 0;
-  color: #fff7dc;
-  background: transparent;
-  padding: 0 8px;
 }
 
 .google-button-slot {
@@ -380,8 +373,17 @@ img {
   flex-wrap: wrap;
 }
 
-.login-actions .demo-login-link {
-  color: var(--green);
+.guest-login-button {
+  border: 1px solid var(--green);
+  color: white;
+  background: var(--green);
+  padding: 0 12px;
+}
+
+.google-setup-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .language-switch {
