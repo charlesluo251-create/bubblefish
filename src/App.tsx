@@ -1591,28 +1591,21 @@ function App() {
       )}
 
       <footer className="site-footer">
-        <button type="button" onClick={() => setView("submit")}>
+        <button className="submit-float-button" type="button" onClick={() => setView("submit")}>
           <Send size={15} />
           {c.submitPlace}
         </button>
-        <button type="button" onClick={() => setView("agreement")}>
-          <ShieldCheck size={15} />
-          {c.agreement}
-        </button>
-        <button type="button" onClick={() => setView("developer")}>
-          <Lock size={15} />
-          {c.developer}
-        </button>
       </footer>
 
-      {!acceptedAgreement && view === "user" && (
-        <div className="agreement-banner">
-          <span>{c.legalTitle}</span>
-          <button type="button" onClick={() => setView("agreement")}>
-            {c.agreement}
-          </button>
-        </div>
-      )}
+      <nav className="fine-links" aria-label="Site links">
+        <button type="button" onClick={() => setView("agreement")}>
+          {c.agreement}
+        </button>
+        <span aria-hidden="true">·</span>
+        <button type="button" onClick={() => setView("developer")}>
+          {c.developer}
+        </button>
+      </nav>
 
       {toast && (
         <div className="toast" role="status" aria-live="polite">
