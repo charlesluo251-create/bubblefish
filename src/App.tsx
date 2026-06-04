@@ -1617,6 +1617,7 @@ function App() {
                       <option value={8}>8km</option>
                       <option value={12}>12km</option>
                       <option value={20}>20km</option>
+                      <option value={40}>40km</option>
                     </select>
                   </div>
                   <p className={`location-status status-${locationStatus}`}>

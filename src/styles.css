@@ -21,6 +21,13 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -50,6 +57,7 @@ img {
 
 .app-shell {
   min-height: 100vh;
+  overflow-x: hidden;
   padding-bottom: 118px;
 }
 
@@ -197,6 +205,10 @@ img {
 .location-status.status-allowed {
   color: #e9fff4;
   background: rgba(15, 107, 87, 0.54);
+}
+
+.location-status.status-idle {
+  display: none;
 }
 
 .location-status.status-blocked,
@@ -1577,24 +1589,52 @@ img {
   }
 }
 
-@media (max-width: 410px) {
+@media (max-width: 640px) {
+  .hero {
+    min-height: 0;
+  }
+
+  .hero__overlay {
+    min-height: 0;
+    padding: 12px 12px 24px;
+  }
+
   .topbar {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
   }
 
   .topbar-right {
-    justify-items: stretch;
+    display: contents;
   }
 
   .top-location-card,
   .top-location,
-  .language-switch,
   .account-chip {
     width: 100%;
   }
 
+  .top-location-card {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .language-switch {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .account-chip {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
   .top-location {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) 36px minmax(64px, 74px);
+    row-gap: 7px;
+    padding-left: 0;
   }
 
   .top-location button {
@@ -1608,14 +1648,59 @@ img {
   }
 
   .radius-select {
-    grid-column: 2 / -1;
     max-width: none;
     width: 100%;
   }
 
   .account-chip {
-    flex-wrap: wrap;
-    justify-content: stretch;
+    max-width: none;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+
+  .account-chip strong {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+
+  .hero__content {
+    gap: 16px;
+    margin-top: 22px;
+  }
+
+  .hero h1 {
+    font-size: clamp(38px, 12vw, 56px);
+    line-height: 0.98;
+  }
+
+  .hero p {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .hero__stats div {
+    padding: 10px 8px;
+  }
+
+  .hero__stats span {
+    font-size: 22px;
+  }
+
+  .hero__stats small {
+    white-space: normal;
+    line-height: 1.25;
+    font-size: 11px;
+  }
+
+  .workspace {
+    width: min(100% - 20px, 1440px);
+    margin-top: -16px;
+  }
+
+  .section-heading,
+  .restaurant-card__title,
+  .queue-item__head {
+    align-items: flex-start;
   }
 
   .language-switch button {
@@ -1630,6 +1715,16 @@ img {
   .site-footer button {
     min-width: 0;
     font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .top-location {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .radius-select {
+    grid-column: 2 / -1;
   }
 }
 
