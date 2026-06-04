@@ -342,6 +342,37 @@ img {
   line-height: 1.55;
 }
 
+.preference-consent-note {
+  max-width: 620px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 11px;
+  border: 1px solid #b7d4c8;
+  background: #f0faf4;
+  border-radius: 8px;
+  color: #3f514b;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.preference-consent-note span {
+  flex: 1 1 220px;
+}
+
+.preference-consent-note button {
+  min-height: 32px;
+  border: 0;
+  color: white;
+  background: var(--green);
+  border-radius: 7px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
 .login-actions {
   display: flex;
   align-items: center;

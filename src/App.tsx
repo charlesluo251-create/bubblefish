@@ -182,6 +182,14 @@ type ToastState = {
   detail: string;
 };
 
+type PreferenceProfile = {
+  categories: Partial<Record<Exclude<CategoryKey, "all">, number>>;
+  restaurants: Record<string, string>;
+  updatedAt: string;
+};
+
+type PreferenceProfiles = Record<string, PreferenceProfile>;
+
 const ownerCode = "Ilovewangzixuan0221";
 const googleClientId = (import.meta as ImportMeta & {
   env?: { VITE_GOOGLE_CLIENT_ID?: string };
@@ -209,7 +217,7 @@ const copy = {
     radius: "范围",
     search: "搜索餐厅、区域、推荐菜",
     all: "全部",
-    strongPick: "强推荐",
+    strongPick: "尝鲜推荐",
     pickAgain: "再换一家",
     nearbyChoices: "附近可选",
     questionnairePublished: "已收推荐",
@@ -261,7 +269,8 @@ const copy = {
     signInGoogle: "使用 Google 登录",
     demoSignIn: "演示登录",
     loginTitle: "先登录，再找附近好吃的",
-    loginBody: "登录后可以点赞、推荐餐厅、提交评论，也方便后台统计真实注册人数。",
+    loginBody:
+      "登录是为了给你的账号保留口味记忆。同意用户协议后，Bubble Fish 会少重复推荐你常吃的类型，多给你尝试没吃过的菜系。",
     signedInAs: "已登录",
     signOut: "退出",
     registeredUsers: "注册用户",
@@ -293,8 +302,10 @@ const copy = {
     enriched: "已补全",
     legalTitle: "Bubble Fish 用户协议",
     legalBody:
-      "Bubble Fish 提供餐厅发现、点赞、评论和推荐提交服务。用户提交内容需基于真实消费体验，不得包含广告、辱骂、虚假信息、隐私信息或违法内容。位置权限只用于计算附近餐厅距离；原型版本不会上传定位数据。平台会对餐厅和评论进行审核后展示，并可移除不适合公开展示的内容。餐厅信息、价格、营业状态和推荐菜可能变化，实际消费前请以地图、商家页面或现场信息为准。",
-    agree: "我知道了",
+      "Bubble Fish 提供餐厅发现、点赞、评论和推荐提交服务。用户提交内容需基于真实消费体验，不得包含广告、辱骂、虚假信息、隐私信息或违法内容。位置权限只用于计算附近餐厅距离；原型版本不会上传定位数据。账号偏好推荐只会在你同意本协议后启用：Bubble Fish 会把这个账号下的点赞、推荐餐厅和相关互动用于判断你较常吃的菜系，并优先推荐你较少尝试的类型。未同意时仍可浏览基础推荐，不会启用个性化尝鲜推荐。平台会对餐厅和评论进行审核后展示，并可移除不适合公开展示的内容。餐厅信息、价格、营业状态和推荐菜可能变化，实际消费前请以地图、商家页面或现场信息为准。",
+    preferenceNotice: "同意用户协议后，才会为这个账号开启口味记忆和尝鲜推荐。",
+    agreementCta: "查看并同意",
+    agree: "同意并开启尝鲜推荐",
   },
   en: {
     tagline: "Stop overthinking dinner",
@@ -312,7 +323,7 @@ const copy = {
     radius: "Radius",
     search: "Search place, area, or dish",
     all: "All",
-    strongPick: "Strong pick",
+    strongPick: "Discovery pick",
     pickAgain: "Pick again",
     nearbyChoices: "nearby choices",
     questionnairePublished: "picks received",
@@ -364,7 +375,8 @@ const copy = {
     signInGoogle: "Sign in with Google",
     demoSignIn: "Demo sign in",
     loginTitle: "Sign in to find nearby food",
-    loginBody: "After signing in, you can like places, recommend restaurants, and submit comments.",
+    loginBody:
+      "Sign in so this account can keep your taste memory. After you accept the terms, Bubble Fish can repeat less of what you already eat and suggest more new food types.",
     signedInAs: "Signed in",
     signOut: "Sign out",
     registeredUsers: "Registered users",
@@ -396,8 +408,10 @@ const copy = {
     enriched: "Enriched",
     legalTitle: "Bubble Fish User Terms",
     legalBody:
-      "Bubble Fish provides restaurant discovery, likes, comments, and recommendation submissions. User content should reflect real dining experiences and must not include ads, abuse, false information, private data, or illegal content. Location permission is used only to calculate nearby distances; this prototype does not upload location data. Restaurants and comments may be reviewed before display. Restaurant information, price, opening status, and dishes may change, so please verify before visiting.",
-    agree: "Got it",
+      "Bubble Fish provides restaurant discovery, likes, comments, and recommendation submissions. User content should reflect real dining experiences and must not include ads, abuse, false information, private data, or illegal content. Location permission is used only to calculate nearby distances; this prototype does not upload location data. Account preference recommendations only turn on after you accept these terms: Bubble Fish may use likes, restaurant recommendations, and related interactions under this account to infer food types you often choose and prioritize types you have tried less. If you do not accept, you can still browse basic recommendations and personalized discovery will stay off. Restaurants and comments may be reviewed before display. Restaurant information, price, opening status, and dishes may change, so please verify before visiting.",
+    preferenceNotice: "Accept the terms to turn on taste memory and discovery picks for this account.",
+    agreementCta: "Review terms",
+    agree: "Accept and turn on discovery",
   },
   ms: {
     tagline: "Tak perlu pening makan apa",
@@ -415,7 +429,7 @@ const copy = {
     radius: "Jarak",
     search: "Cari kedai, kawasan atau hidangan",
     all: "Semua",
-    strongPick: "Pilihan kuat",
+    strongPick: "Cadangan cuba baru",
     pickAgain: "Pilih lagi",
     nearbyChoices: "pilihan dekat",
     questionnairePublished: "cadangan diterima",
@@ -467,7 +481,8 @@ const copy = {
     signInGoogle: "Log masuk Google",
     demoSignIn: "Log masuk demo",
     loginTitle: "Log masuk untuk cari makanan dekat",
-    loginBody: "Selepas log masuk, anda boleh like, cadang restoran dan hantar komen.",
+    loginBody:
+      "Log masuk supaya akaun ini boleh simpan memori rasa anda. Selepas anda setuju terma, Bubble Fish boleh kurang ulang jenis yang biasa dimakan dan cadang lebih banyak jenis baharu.",
     signedInAs: "Sudah log masuk",
     signOut: "Keluar",
     registeredUsers: "Pengguna berdaftar",
@@ -499,8 +514,10 @@ const copy = {
     enriched: "Siap",
     legalTitle: "Terma Pengguna Bubble Fish",
     legalBody:
-      "Bubble Fish menyediakan carian restoran, like, komen dan cadangan. Kandungan pengguna mestilah berdasarkan pengalaman makan sebenar dan tidak boleh mengandungi iklan, makian, maklumat palsu, data peribadi atau kandungan salah di sisi undang-undang. Kebenaran lokasi hanya digunakan untuk kira jarak; prototaip ini tidak memuat naik lokasi. Restoran dan komen disemak sebelum dipaparkan. Maklumat restoran boleh berubah, sila semak sebelum pergi.",
-    agree: "Faham",
+      "Bubble Fish menyediakan carian restoran, like, komen dan cadangan. Kandungan pengguna mestilah berdasarkan pengalaman makan sebenar dan tidak boleh mengandungi iklan, makian, maklumat palsu, data peribadi atau kandungan salah di sisi undang-undang. Kebenaran lokasi hanya digunakan untuk kira jarak; prototaip ini tidak memuat naik lokasi. Cadangan ikut pilihan akaun hanya aktif selepas anda setuju terma ini: Bubble Fish boleh guna like, cadangan restoran dan interaksi berkaitan dalam akaun ini untuk faham jenis makanan yang biasa dipilih dan utamakan jenis yang jarang dicuba. Jika belum setuju, anda masih boleh lihat cadangan asas dan cadangan peribadi tidak diaktifkan. Restoran dan komen disemak sebelum dipaparkan. Maklumat restoran boleh berubah, sila semak sebelum pergi.",
+    preferenceNotice: "Setuju terma untuk aktifkan memori rasa dan cadangan cuba baru akaun ini.",
+    agreementCta: "Semak terma",
+    agree: "Setuju dan aktifkan",
   },
 } satisfies Record<Locale, Record<string, string>>;
 
@@ -826,8 +843,9 @@ const storageKeys = {
   drafts: "bubblefish-drafts-v6",
   comments: "bubblefish-comments-v6",
   votes: "bubblefish-votes-v6",
+  preferenceProfiles: "bubblefish-preference-profiles-v1",
   analytics: "bubblefish-analytics-v6",
-  agreement: "bubblefish-agreement-v6",
+  agreement: "bubblefish-agreement-v7",
   users: "bubblefish-users-v1",
   currentUser: "bubblefish-current-user-v1",
 };
@@ -979,6 +997,25 @@ function buildLocalAiReview(
   };
 }
 
+function emptyPreferenceProfile(): PreferenceProfile {
+  return {
+    categories: {},
+    restaurants: {},
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function preferenceScore(
+  restaurant: Restaurant,
+  profile: PreferenceProfile | null,
+  acceptedAgreement: boolean,
+) {
+  if (!acceptedAgreement || !profile) return 0;
+  const categoryCount = profile.categories[restaurant.category] || 0;
+  const alreadyTried = restaurant.id in profile.restaurants;
+  return (alreadyTried ? -80 : 0) + Math.max(0, 5 - categoryCount) * 12;
+}
+
 function decodeJwtPayload<T>(token: string): T | null {
   try {
     const [, payload] = token.split(".");
@@ -1045,6 +1082,9 @@ function App() {
   const [currentUser, setCurrentUser] = useState<RegisteredUser | null>(() =>
     safeRead(storageKeys.currentUser, null),
   );
+  const [preferenceProfiles, setPreferenceProfiles] = useState<PreferenceProfiles>(() =>
+    safeRead(storageKeys.preferenceProfiles, {}),
+  );
   const [locationStatus, setLocationStatus] = useState<LocationStatus>("idle");
   const [toast, setToast] = useState<ToastState | null>(null);
   const autoLocationRequestedRef = useRef(false);
@@ -1057,6 +1097,8 @@ function App() {
   const currentLocation: ActiveLocation = liveLocation || preset;
   const approvedComments = comments.filter((comment) => comment.status === "approved");
   const pendingComments = comments.filter((comment) => comment.status === "pending");
+  const currentPreferenceProfile =
+    currentUser && acceptedAgreement ? preferenceProfiles[currentUser.email] || null : null;
   const normalizedDrafts = drafts.map((draft) => ({
     ...draft,
     submitterName: draft.submitterName || "",
@@ -1150,11 +1192,17 @@ function App() {
         return categoryMatch && (!normalized || searchable.includes(normalized));
       })
       .sort((a, b) => {
+        const preferenceDelta =
+          preferenceScore(b, currentPreferenceProfile, acceptedAgreement) -
+          preferenceScore(a, currentPreferenceProfile, acceptedAgreement);
+        if (preferenceDelta) return preferenceDelta;
         if (b.weeklyLikes !== a.weeklyLikes) return b.weeklyLikes - a.weeklyLikes;
         return a.distanceKm - b.distanceKm;
       });
   }, [
+    acceptedAgreement,
     approvedComments,
+    currentPreferenceProfile,
     currentLocation,
     locale,
     query,
@@ -1165,8 +1213,17 @@ function App() {
 
   const strongPick = useMemo(() => {
     if (!nearbyRestaurants.length) return null;
-    return nearbyRestaurants[Math.abs(randomSeed) % nearbyRestaurants.length];
-  }, [nearbyRestaurants, randomSeed]);
+    const ranked = [...nearbyRestaurants].sort((a, b) => {
+      const preferenceDelta =
+        preferenceScore(b, currentPreferenceProfile, acceptedAgreement) -
+        preferenceScore(a, currentPreferenceProfile, acceptedAgreement);
+      if (preferenceDelta) return preferenceDelta;
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      return a.distanceKm - b.distanceKm;
+    });
+    const discoveryWindow = ranked.slice(0, Math.min(4, ranked.length));
+    return discoveryWindow[Math.abs(randomSeed) % discoveryWindow.length];
+  }, [acceptedAgreement, currentPreferenceProfile, nearbyRestaurants, randomSeed]);
 
   const leaderboard = nearbyRestaurants
     .filter((restaurant) => restaurant.weeklyLikes > 0)
@@ -1308,8 +1365,31 @@ function App() {
     requestUserLocation();
   }
 
+  function rememberPreference(restaurant: Restaurant) {
+    if (!acceptedAgreement || !currentUser) return;
+    const previous = preferenceProfiles[currentUser.email] || emptyPreferenceProfile();
+    const nextProfile: PreferenceProfile = {
+      categories: {
+        ...previous.categories,
+        [restaurant.category]: (previous.categories[restaurant.category] || 0) + 1,
+      },
+      restaurants: {
+        ...previous.restaurants,
+        [restaurant.id]: new Date().toISOString(),
+      },
+      updatedAt: new Date().toISOString(),
+    };
+    const nextProfiles = {
+      ...preferenceProfiles,
+      [currentUser.email]: nextProfile,
+    };
+    setPreferenceProfiles(nextProfiles);
+    safeWrite(storageKeys.preferenceProfiles, nextProfiles);
+  }
+
   function handleVote(id: string) {
     if (votedIds[id] === weekKey) return;
+    const votedRestaurant = restaurants.find((restaurant) => restaurant.id === id);
     const nextRestaurants = restaurants.map((restaurant) =>
       restaurant.id === id
         ? {
@@ -1324,6 +1404,7 @@ function App() {
     const nextVotes = { ...votedIds, [id]: weekKey };
     setVotedIds(nextVotes);
     safeWrite(storageKeys.votes, nextVotes);
+    if (votedRestaurant) rememberPreference(votedRestaurant);
     persistAnalytics({ ...analytics, likes: analytics.likes + 1 });
   }
 
@@ -1393,6 +1474,28 @@ function App() {
     setManualDishes("");
     setManualReview("");
     setManualRealName("");
+    rememberPreference({
+      id: draft.id,
+      name: draft.name,
+      city: draft.city,
+      country: countryForCity(draft.city),
+      area: draft.area,
+      address: draft.address,
+      lat: 0,
+      lng: 0,
+      category: draft.category,
+      image: draft.image,
+      price: draft.price,
+      rating: 0,
+      weeklyLikes: 0,
+      totalLikes: 0,
+      recommendedDishes: draft.dishes,
+      tags: { zh: [], en: [], ms: [] },
+      note: { zh: "", en: "", ms: "" },
+      mapUrl: "",
+      source: "community",
+      submittedAt: draft.submittedAt,
+    });
     showToast(c.submitted, c.submittedDetail);
   }
 
@@ -1559,11 +1662,13 @@ function App() {
     setDrafts(starterDrafts);
     setComments(initialComments);
     setVotedIds({});
+    setPreferenceProfiles({});
     setAnalytics(defaultAnalytics);
     safeWrite(storageKeys.restaurants, baselineRestaurants);
     safeWrite(storageKeys.drafts, starterDrafts);
     safeWrite(storageKeys.comments, initialComments);
     safeWrite(storageKeys.votes, {});
+    safeWrite(storageKeys.preferenceProfiles, {});
     safeWrite(storageKeys.analytics, defaultAnalytics);
   }
 
@@ -1694,9 +1799,11 @@ function App() {
       {!currentUser && (
         <LoginGate
           c={c}
+          acceptedAgreement={acceptedAgreement}
           googleClientId={googleClientId}
           googleButtonRef={googleButtonRef}
           onDemoSignIn={handleDemoSignIn}
+          onOpenAgreement={() => setView("agreement")}
         />
       )}
 
@@ -1805,6 +1912,15 @@ function App() {
             {c.submitPlace}
           </button>
         </footer>
+      )}
+
+      {currentUser && !acceptedAgreement && view === "user" && (
+        <div className="agreement-banner" role="region" aria-label={c.agreement}>
+          <span>{c.preferenceNotice}</span>
+          <button type="button" onClick={() => setView("agreement")}>
+            {c.agreementCta}
+          </button>
+        </div>
       )}
 
       <nav className="fine-links" aria-label="Site links">
@@ -1990,14 +2106,18 @@ function UserHome({
 
 function LoginGate({
   c,
+  acceptedAgreement,
   googleClientId,
   googleButtonRef,
   onDemoSignIn,
+  onOpenAgreement,
 }: {
   c: (typeof copy)[Locale];
+  acceptedAgreement: boolean;
   googleClientId?: string;
   googleButtonRef: React.RefObject<HTMLDivElement | null>;
   onDemoSignIn: () => void;
+  onOpenAgreement: () => void;
 }) {
   return (
     <section className="login-gate">
@@ -2006,6 +2126,14 @@ function LoginGate({
           <p className="eyebrow">Bubble Fish</p>
           <h2>{c.loginTitle}</h2>
           <p>{c.loginBody}</p>
+          {!acceptedAgreement && (
+            <div className="preference-consent-note">
+              <span>{c.preferenceNotice}</span>
+              <button type="button" onClick={onOpenAgreement}>
+                {c.agreementCta}
+              </button>
+            </div>
+          )}
         </div>
         <div className="login-actions">
           {googleClientId ? (
